@@ -3,13 +3,28 @@ import React, { useState, useEffect } from "react";
 const Home = () => {
 
 	let [inputValue, setInputValue] = useState("");
-	let [arrToDo, setArrToDo] = useState([])
-	let [hoverIndex, setHoverIndex] = useState(null)
+	let [arrToDo, setArrToDo] = useState([]);
+	let [hoverIndex, setHoverIndex] = useState(null);
 
-	const handleKeyDown = (e) => {
+	const createUser = async () => {
+		await fetch('https://playground.4geeks.com/todo/users/santiago', {
+			method: 'POST',
+			body: { name: "santiago", id: 666 },
+			headers: { "Content-Type": "application/json" }
+		})
+			.then((response) => response.json())
+			.then((data) => console.log(data))
+			.catch((error) => {
+				console.error("Error", error)
+			})
+	}
+
+	const handleKeyDown = async (e) => {
 		if (inputValue.trim() === "") return
 		if (e.key === "Enter") {
 			setArrToDo([...arrToDo, inputValue.trim()]);
+			await addTask();
+			obtainData()
 			setInputValue("");
 		}
 	};
@@ -18,18 +33,31 @@ const Home = () => {
 		setArrToDo(arrToDo.filter((curr, i) => i !== index));
 	};
 
-	useEffect(() => {
-		const getUserInfo = async () => {
-			const response = await fetch('https://playground.4geeks.com/todo/users/santiago');
-			const data = await response.json();
-			console.log(data)
-		}
-		getUserInfo();
-	}, [])
+	const handleDeleteList = () => {
+		fetch('https://playground.4geeks.com/todo/users/santiago', {
+			method: 'DELETE'
+		})
+			.then(response => {
+				if (response.ok) {
+					setArrToDo([])
+					createUser()
+				} else {
+					console.log("error")
+				}
+			})
+			.catch(error => {
+				console.log("Error", error)
+			})
+	}
 
-	//addNewToDo
+	const obtainData = async () => {
+		await fetch('https://playground.4geeks.com/todo/users/santiago')
+			.then((response) => response.json())
+			.then((json) => console.log(json))
+	}
+
 	const newItem = { label: inputValue };
-	useEffect(() => {
+	const addTask = () => {
 		if (inputValue) {
 			fetch('https://playground.4geeks.com/todo/todos/santiago', {
 				method: "POST",
@@ -46,7 +74,15 @@ const Home = () => {
 					console.log("Error", error)
 				})
 		}
-	}, [inputValue])
+	}
+
+	useEffect(() => {
+		createUser()
+	}, [])
+
+	useEffect(() => {
+		obtainData()
+	}, [])
 
 	return (
 		<div className="container w-50 text-center mt-5 d-flex flex-column">
@@ -92,7 +128,7 @@ const Home = () => {
 
 			<div className="background-box">back1</div>
 			<div className="background-box2">back2</div>
-			<button id="clean" type="button" className="btn btn-lg">Limpiar lista</button>
+			<button id="clean" type="button" className="btn btn-lg" onClick={() => handleDeleteList()}>Limpiar lista</button>
 		</div>
 	);
 };
