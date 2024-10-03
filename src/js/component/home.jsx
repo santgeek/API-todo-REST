@@ -6,7 +6,27 @@ const Home = () => {
 	let [arrToDo, setArrToDo] = useState([]);
 	let [hoverIndex, setHoverIndex] = useState(null);
 
-	const createUser = async () => {
+
+	async function createUser() {
+		const resp = await fetch('https://playground.4geeks.com/todo/users/santiago')
+		try {
+			if (!resp.ok) {
+				const addUser = await fetch('https://playground.4geeks.com/todo/users/santiago', {
+					method: 'POST',
+					body: JSON.stringify({ name: "santiago", id: 666 }),
+					headers: { "Content-Type": "application/json" }
+				})
+				const data = await addUser.json()
+				console.log(data)
+			}
+		} catch (error) {
+			console.error("Error", error)
+		}
+	}
+
+	createUser()
+
+	/*const createUser = async () => {
 		await fetch('https://playground.4geeks.com/todo/users/santiago', {
 			method: 'POST',
 			body: { name: "santiago", id: 666 },
@@ -17,7 +37,7 @@ const Home = () => {
 			.catch((error) => {
 				console.error("Error", error)
 			})
-	}
+	}*/
 
 	const handleKeyDown = async (e) => {
 		if (inputValue.trim() === "") return
@@ -40,7 +60,7 @@ const Home = () => {
 			.then(response => {
 				if (response.ok) {
 					setArrToDo([])
-					createUser()
+					//createUser()
 				} else {
 					console.log("error")
 				}
@@ -76,9 +96,9 @@ const Home = () => {
 		}
 	}
 
-	useEffect(() => {
+	/*useEffect(() => {
 		createUser()
-	}, [])
+	}, [])*/
 
 	useEffect(() => {
 		obtainData()
