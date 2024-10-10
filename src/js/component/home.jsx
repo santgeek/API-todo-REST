@@ -6,14 +6,13 @@ const Home = () => {
 	let [arrToDo, setArrToDo] = useState([]);
 	let [hoverIndex, setHoverIndex] = useState(null);
 
-
 	async function createUser() {
 		const resp = await fetch('https://playground.4geeks.com/todo/users/santiago')
 		try {
 			if (!resp.ok) {
 				const addUser = await fetch('https://playground.4geeks.com/todo/users/santiago', {
 					method: 'POST',
-					body: JSON.stringify({ name: "santiago", id: 666 }),
+					body: JSON.stringify({ name: "santiago" }),
 					headers: { "Content-Type": "application/json" }
 				})
 				const data = await addUser.json()
@@ -24,34 +23,27 @@ const Home = () => {
 		}
 	}
 
-	createUser()
-
-	/*const createUser = async () => {
-		await fetch('https://playground.4geeks.com/todo/users/santiago', {
-			method: 'POST',
-			body: { name: "santiago", id: 666 },
-			headers: { "Content-Type": "application/json" }
-		})
-			.then((response) => response.json())
-			.then((data) => console.log(data))
-			.catch((error) => {
-				console.error("Error", error)
-			})
-	}*/
-
 	const handleKeyDown = async (e) => {
 		if (inputValue.trim() === "") return
 		if (e.key === "Enter") {
-			setArrToDo([...arrToDo, inputValue.trim()]);
-			await addTask();
+			const newTask = { label: inputValue.trim() };
+			await addTask(newTask);
 			obtainData()
 			setInputValue("");
 		}
 	};
 
-	const handleDelete = (index) => {
-		setArrToDo(arrToDo.filter((curr, i) => i !== index));
-	};
+	const handleDelete = async (itemId) => {
+		const response = await fetch('https://playground.4geeks.com/todo/todos/' + itemId, {
+			method: 'DELETE'
+		})
+		if (!response.ok) {
+			console.error(response.statusText)
+			return false
+		}
+		setArrToDo(arrToDo.filter(todo => todo.id !== itemId))
+		return true
+	}
 
 	const handleDeleteList = () => {
 		fetch('https://playground.4geeks.com/todo/users/santiago', {
@@ -60,7 +52,7 @@ const Home = () => {
 			.then(response => {
 				if (response.ok) {
 					setArrToDo([])
-					//createUser()
+					createUser()
 				} else {
 					console.log("error")
 				}
@@ -71,9 +63,14 @@ const Home = () => {
 	}
 
 	const obtainData = async () => {
-		await fetch('https://playground.4geeks.com/todo/users/santiago')
-			.then((response) => response.json())
-			.then((json) => console.log(json))
+		const response = await fetch('https://playground.4geeks.com/todo/users/santiago')
+		if (!response.ok) {
+			console.error(response.statusText)
+			return false
+		}
+		const todoTasks = await response.json()
+		setArrToDo(todoTasks.todos)
+		return true
 	}
 
 	const newItem = { label: inputValue };
@@ -90,17 +87,15 @@ const Home = () => {
 				.then(data => {
 					console.log(data)
 				})
+				.then(obtainData())
 				.catch(error => {
 					console.log("Error", error)
 				})
 		}
 	}
 
-	/*useEffect(() => {
-		createUser()
-	}, [])*/
-
 	useEffect(() => {
+		createUser()
 		obtainData()
 	}, [])
 
@@ -127,11 +122,11 @@ const Home = () => {
 						className="list-group-item d-flex justify-content-between text-secondary fs-4"
 						onMouseEnter={() => setHoverIndex(index)}
 						onMouseLeave={() => setHoverIndex(null)}
-					> {element}
+					> {element.label}
 						{hoverIndex === index && (
 							<button
 								className="btn btn-sm justify-content-between"
-								onClick={() => handleDelete(index)}
+								onClick={() => handleDelete(element.id)}
 							>
 								x
 							</button>
